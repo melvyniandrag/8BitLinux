@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Dmitry.GR</title>
+
+    <meta name="description" content="Dmitry.GR">
+    <meta name="author" content="Dmitry.GR">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+   
+    <script type="text/javascript" src="https://www.google.com/recaptcha/api.js"></script>
+    <script type="text/javascript" src="comments.js"></script>
+<!-- fuck GDPR, i do not have time for this shit - I just wanted to know who visits my site
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-111505483-2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-111505483-2');
+    </script>
+-->
+  </head>
+  <body>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<nav class="navbar navbar-default navbar-fixed-top">
+				<div class="navbar-header">
+					 
+					<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+						 <span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+					</button> <a class="navbar-brand" href="?">Dmitry.GR</a>
+				</div>
+				
+				<div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+					<ul class="nav navbar-nav">
+						<li ><a href="?r=01.Myself">Myself</a></li><li  class="active"><a href="?r=05.Projects">Projects</a></li><li ><a href="?r=06. Thoughts"> Thoughts</a></li>					</ul>
+				</div>
+			</nav>
+			<ul class="breadcrumb"><li><a href="?">Dmitry.GR</a><span class="divider">/</span></li><li><a href="?r=05.Projects">Projects</a><span class="divider">/</span></li><li class="active"> Linux on 8bit</li></ul><div class="row"><div class="col-md-1"></div><div class="col-md-10">
+
+<h1>Linux on an 8-bit micro?</h1>
+<h3>UPDATE #3</h3>
+<p>Apr 16, 2012, 2am PDT: Small schematic fix (SD card's SCK & VDD were switched)
+<h3>UPDATE #2</h3>
+<p>Apr 3, 2012, 1am PDT: new source code archive uploaded. Sped up emulator (6.5KHz->10KHz) using FPM mode on RAM & changed icache config, updated porting guide, included kernel image & new smaller ramdisk, new full image
+<h3>UPDATE #1</h3>
+<p>Mar 29, 2012, 7pm PDT: new source code archive uploaded. It has a fixed Makefile and <b>now includes a porting guide</b> to help you port it to other boards/CPUs
+</p>
+<img src="/images/board1.jpg" style="float:right; margin: 1em; margin-bottom: 0px; border: 1px solid black;"/>
+<h2>Intro</h2>
+<p style="text-align: justify;">It is common to see newbies asking in microcontroller forums if they can run Linux on their puny little 8-bit micro. The results are usually laughter. It is also common to see, in Linux forums, asked what the minimum specs for Linux are. The common answer is that it requires a 32-bit architecture and an MMU and at least a megabyte of ram to fit the kernel. This project aims to (and succeeds in) shatter(ing) these notions. The board you see on the right is based on an ATmega1284p. I've made one with an ATmega644a as well, with equal success. This board features no other processor and boots Linux 2.6.34. In fact, it can even bring up a full Ubuntu stack, including (if you have the time) X and gnome. 
+</p>
+<h2>RAM</h2>
+<p style="text-align: justify;">Yes, it is true that a full Linux install requires megabytes or RAM and a 32-bit CPU with an MMU. This project has all of that. First let's address the RAM. As you can see, there is an antique 30-pin SIMM memory module on the board. These were in use for 80286-based PCs. It is interfaced to the ATmega, and I wrote the code to access it as well as refresh it within spec (SDRAM requires constant refreshing to avoid losing data). How fast it is? The refresh interrupt happens every 62ms and takes up 1.5ms, thus eating under 3% of the CPU. RAM is accessed, for ease of programming, one byte at a time. This results in a maximum bandwidth of about 300 kilobytes per second.
+</p>
+<img src="/images/board2.jpg" style="float:right; margin: 1em; margin-bottom: 0px; border: 1px solid black;"/>
+<h2>Storage</h2>
+<p style="text-align: justify;">With the RAM requirement put to rest, we have two to deal with. Storage is not too difficult a problem to solve. SD cards are quite easy to talk to using SPI, and my project does that. A 1GB SD card works fine, though 512Mb would be enough for this particular file system (Ubuntu Jaunty). The ATmega does have a hardware SPI module, but for whatever reason, it didn't quite work out, so I am bit-banging the interface. It is still plenty fast - about 200kilobytes per second. This also adds a nice touch to the project - it can be done on any microcontroller with enough pins - no hardware modules are used.
+</p>
+<h2>CPU</h2>
+<p style="text-align: justify;">All that's left is that pesky 32-bit CPU & MMU requirement. Well the AVR has no MMU and is 8-bit. To conquer this obstacle, I wrote an ARM emulator. ARM is the architecture I am most familiar with, and it's simple enough that I could comfortably write an emulator for it. Why write one instead of porting one? Well, porting someone else's code is no fun, plus none of the emulators I saw out there were written in a way that would make them easy to port to an 8-bit device. One of the factors: AVR compiler insists on making ints 16-bit so something as simple as "(1 << 20)" will get you in trouble, producing zero. Instead you need to do "(1UL << 20)". Needless to say trawling someone else's unknown codebase looking for all places where ints are assumed and would fail would be a disaster. Plus I wanted a chance to write a nice modular ARM emulator. So I did.
+</p>
+<img src="/images/board3.jpg" style="float:left; margin: 1em; margin-bottom: 0px; border: 1px solid black;"/>
+<h2>Other features</h2>
+<p style="text-align: justify;">The board's communication with the real world occurs over a serial port. Currently it is attached to a serial port on my PC running minicom, but it is fathomable to instead connect a keyboard and a character LCD to the board, making it entirely standalone. Two LEDs exist on the board as well. They signal SD card access. One for read, one for write. A button is onboard too. When pressed and held for a second it will spit out on the serial port the current effective speed of the emulated CPU. The AVR is clocked at 24MHz (a slight overclocking over its stock 20MHz)
+</p>
+<h2>How fast is it?</h2>
+<p style="text-align: justify;">uARM is certainly no speed demon. It takes about 2 hours to boot to bash prompt ("init=/bin/bash" kernel command line). Then 4 more hours to boot up the entire Ubuntu ("exec init" and then login). Starting X takes a lot longer. The effective emulated CPU speed is about 6.5KHz, which is on par with what you'd expect emulating a 32-bit CPU & MMU on a measly 8-bit micro. <b>Curiously enough</b>, once booted, the system is somewhat usable. You can type a command and get a reply within a minute. That is to say that you <b>can</b>, in fact, use it. I used it to day to format an SD card, for example. This is definitely not the fastest, but I think it may be the <i>cheapest</i>, <i>slowest</i>, <i>simplest to hand assemble</i>, <i>lowest part count</i>, and <i>lowest-end</i> Linux PC. The board is hand-soldered using wires, there is not even a requirement for a printed circuit board.
+</p>
+<h2>Details on the emulator?</h2>
+<p style="text-align: justify;">The emulator is pretty modular, allowing it to be extended at will to emulate other SoCs and hardware configurations. The emulated CPU is ARMv5TE. A while ago I started work on supporting ARMv6, but it was never finished (as can be seen in the code) due to not being needed. The emulated SoC is a PXA255. Due to the modularity of the design, you can replace SoC.c and make a whole new SoC with the same ARMv5TE core, or replace the core, or replace the peripherals at will. This is on purpose, as I meant this code to also be a reasonably clean demonstration on how ARM SoCs work. The code for CPU emulator itself is not too clean, since, well, it is a CPU emulator. It was written over 6 months of free time a few years back, and then put aside. It was resurrected recently specifically for this project. The emulator implements an i-cache to speed things up. This helps <b>a lot</b> on the AVR where internal memory can be accessed at over a 5 megabytes a second, unlike my external RAM. I never got around to implementing d-cache but it was in the todo list. The access to the block device is not emulated as an SD device. This turned out to be too slow. Instead there is a paravirtualized disk device (pvdisk, see pvDisk.tar.bz2, GPL license) that I wrote that uses an invalid opcode to call into the emulator and access the disk. The ramdisk in my image loads this pvdisk, and then chroots to  /dev/pvd1. The ramdisk is included as "rd.img". The "machine type" I use is PalmTE2. Why? Because I am quite familiar with the hardware and it was the first pxa255 machine type I saw.
+</p>
+<h2>Hypercalls?</h2>
+<p style="text-align: justify;">There are a few services you can request from the emulator by using a special opcode. In arm it is 0xF7BBBBBB, in thumb it is 0xBBBB. These are picked since they are in range that ARM guarantees to be undefined. The hypercall number is passed in R12, params are passed in R0..R3, return values are placed in R0. Calls: <ul><li>0 = stop emulation</li><li>1 = print decimal number</li><li>2 = print char</li><li>3 = get ram size</li><li>4 = block device ops(R0 = op R1 = sector num). Note that these do not write the emulatoed RAM, they fill in a in-emulator buffer, which the emulated guest accesses using another hypercall, one word at a time. I meant to implement DMA, but never got around to it.  Ops:<ul><li>0 = getInfo (if sector num is zero, return num sectors; if sector num is 1, return sector size in bytes)</li><li>1 = sector read</li><li>2 = sector write</li></ul></li><li>5 = block device buffer access (R0 = value in/value out, R1 = word number , R2 = 1 if write, 0 else)</li></ul>
+</p>
+<h2>Thumb support?</h2>
+<p style="text-align: justify;">Thumb is fully supported. I cheat a bit, though, decoding each thumb instr to an equivalent ARM instr and executing that instead using the arm emulator function. It is not as fast as it could be otherwise, but it is simple and the code is small. A 256KB lookup table could be used to, but I felt that 256KB is too big for the microcontroller's flash. Some thumb instructions cannot be converted to ARM, they are handled correctly instead.
+</p>
+<div style="float:right; margin: 1em; margin-bottom: 0px; border: 1px solid black;"><a href="/images/uARM_big.png"><img src="/images/uARM_small.jpg"/></a></div>
+<h2>I want to build one!</h2>
+<p style="text-align: justify;">For non-commercial purposes, you can definitely do that. The wiring is as follows. RAM DQ0..DQ7 -> AVR C0..C7. RAM A0..A7 -> AVR A0..A7. RAM A8..A11 -> AVR B0..B3. RAM nRAS nCAS nWE -> AVR D7 B4 B5. SD DI SCK DO -> AVR B6 B7 D6. LEDs read write -> AVR D2 D3 (LED's other legs grounded). Button -> AVR D4 (other leg grounded). The ram can be any 30-pin 16MB SIMM that can live with CAS-before-RAS refresh of 4K cycles every 64ms. The one I used (OWC) is available online for a few dollars. The schematic is shown here. Click it for a bigger view or <a href="/images/uARM_big.png">click here</a>.
+</p>
+<h2>Source code?</h2>
+<p style="text-align: justify;">It is a bit of a mess, but it does work. Get it while it's hot: <a href="/images/uARM.zip">LINK</a>. The license is simple: For non-commercial use, as long as you keep the licence file with the source and publish all your changes, we're cool. For commercial use, talk to me, and we'll agree on something. To build the emulator to try it on the PC type "make". To run use "./uARM DISK_IMAGE". To build optimized PC version use "make BUILD=opt". to build for AVR use "make BUILD=avr". It currently targets ATmega1284p. To target ATmega644, besides the makefile change, reduce the numbers in icache.h so that the icache is small enough to fit in the internal RAM in the 644. Included in the archive is the final hex file for the 1284p as well.
+</p>
+<h2>Boot process</h2>
+<p style="text-align: justify;">To save code-space in the AVR, almost no boot code exists in the emulator. In fact, the "ROM" is a grand total of 50 bytes: 8 bytes to switch to thumb mode, and some thumb code to read the first sector of the SD card and jump to it in thumb mode (see embeddedBoot.c). The MBR of the SD card has another bootloader (written in thumb mode). This one looks at the MBR, finds the active partition and loads its contents to the end of RAM. It then jumps to that destination ram address + 512 (see mbrBoot.c). There lives the third and largest bootloader, ELLE (See ELLE.c). This one relocates the ramdisk, sets up ATAGS, and calls the kernel. All the binaries and sources are provided so that you can make your own images at will. The boot process should be reminiscent of PC boot. :) The included mkbootimg.sh tool can be used to make a working image for the boot partition. A complete working disk image? Here you go: <a href="https://mega.nz/#!0wQSSSbT!VHOZ3XhWDeyxMb8yvuCBw-GfJkpYNnnjIgl9SKWLi6Q">LINK</a>.
+</p>
+<iframe style="float:left; margin: 1em; margin-bottom: 0px; border: 1px solid black;" width="420" height="315" src="https://www.youtube.com/embed/nm0POwEtiqE" frameborder="0" allowfullscreen></iframe>
+<h2>Video</h2>
+<p style="text-align: justify;">The raw video is in a few segments, since I had to change camera batteries a few times while filming. I then spliced them together, to create a huge 3-and-a-half-hour-long video. The uncut version of the video? <a href="http://vimeo.com/dmitrygr/uarm1">Here you go.</a>. I then cut out the interesting parts, sped them up 3x (to fit into youtube video length limits) and made the video you see embedded here on the left. There is a clock in view in the video, showing time elapsed since start in realtime.
+</p>
+					<div id="comments_q_4525" style="width: 100%; clear: both; padding-top: 2em;">
+						<img src="progress.gif" onload="listComments('comments_q_4525', 'X8f9f4faefb49957fc6056ea38f5709eb');" />
+					</div>
+					</div><div class="col-md-1"></div></div>
+								<div style="width:100%; text-align: right; margin-top: 1em;">
+				&copy;
+				2012-2019			</div>
+		</div>
+	</div>
+</div>
+
+    <script src="js/jquery.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+  </body>
+</html>
